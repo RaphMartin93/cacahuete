@@ -86,7 +86,7 @@ if (!$is_admin && $has_drawn) {
 require_once 'template/header.php';
 ?>
 
-<h1 class="mb-4">Tableau de Bord</h1>
+<h1 class="mb-4">Accueil</h1>
 
 <?php if ($error_message): ?>
     <div class="alert alert-danger" role="alert"><?php echo htmlspecialchars($error_message); ?></div>
