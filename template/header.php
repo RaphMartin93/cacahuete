@@ -34,7 +34,7 @@ $username_display = htmlspecialchars($_SESSION['fullname'] ?? $_SESSION['usernam
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto"> 
                     <li class="nav-item"><a class="nav-link" href="dashboard.php">Accueil</a></li>
-                    <li class="nav-item"><a class="nav-link" href="users_list.php">Liste des Personnes</a></li>
+                    <li class="nav-item"><a class="nav-link" href="users_list.php">Liste des Participants</a></li>
                     <li class="nav-item"><a class="nav-link" href="change_password.php">Changer MDP</a></li>
                     <?php if ($is_admin): ?>
                         <li class="nav-item"><a class="nav-link" href="admin.php">Administration</a></li>
