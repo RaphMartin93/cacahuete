@@ -1,0 +1,63 @@
+/* Fichier: /home/secretsanta/public_html/css/style.css (Bootstrap Overrides) */
+
+/* 1. COULEURS DE BASE */
+/* Le rouge dominant pour le header et les titres */
+:root {
+    --ss-red: #A00; /* Rouge foncé */
+    --ss-dark-red: #800; /* Rouge très foncé pour les hover */
+    --ss-green: #28a745; /* Vert Bootstrap standard pour le succès */
+    --ss-light-red: #f8d7da; /* Couleur de fond pour les alertes erreurs */
+}
+
+/* 2. BASE ET CONTENEUR */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa; /* Couleur de fond Bootstrap légère */
+    padding-top: 60px; /* Espace pour la navbar fixe */
+}
+
+/* 3. SURCHARGES BOOTSTRAP (Couleur de la navigation et des titres) */
+.navbar-custom {
+    background-color: var(--ss-red) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar-custom .nav-link {
+    color: white !important;
+    transition: background-color 0.3s;
+}
+
+.navbar-custom .nav-link:hover {
+    background-color: var(--ss-dark-red) !important;
+}
+
+h1, h2 {
+    color: var(--ss-red); 
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* 4. DESIGN SPÉCIFIQUE AU DASHBOARD */
+.result-box {
+    border: 2px solid var(--ss-red);
+    padding: 30px;
+    text-align: center;
+    background-color: #FFEEED;
+    border-radius: 0.25rem; /* Rayon de Bootstrap */
+    max-width: 600px;
+    margin: 30px auto;
+}
+
+.receiver-name {
+    font-size: 2.2em;
+    font-weight: bold;
+    color: #333;
+    margin: 15px 0;
+}
+
+/* 5. ADMIN ACTION BOX */
+.admin-action-box {
+    border: 1px solid #ccc;
+    padding: 20px;
+}
