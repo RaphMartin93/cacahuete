@@ -37,7 +37,7 @@ require_once 'template/header.php';
     <div class="table-responsive">
         <table class="table table-striped table-hover shadow-sm">
             <thead class="table-danger"> <tr>
-                    <th scope="col">Nom Complet</th>
+                    <th scope="col">Nom</th>
                     <th scope="col" class="text-center">Liste de Cadeaux</th>
                 </tr>
             </thead>
