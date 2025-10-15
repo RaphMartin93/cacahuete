@@ -1,5 +1,5 @@
 <?php
-// Fichier: /home/secretsanta/public_html/admin.php
+// Fichier: /home/secretsanta/public_html/admin.php (Modification avec Annulation fonctionnelle)
 
 require_once 'config.php';
 require_once 'auth_check.php';
@@ -10,201 +10,154 @@ if (!$_SESSION['is_admin']) {
     exit;
 }
 
-$message = '';
-$error = '';
-$draw_exists = false;
-$participants = [];
+$error = null;
+$message = null;
 
-
-// --- FONCTION DE TIRAGE AU SORT ---
-function runSecretSantaDraw($pdo) {
-    global $message, $error; 
-
-    // 1. Récupérer la liste de tous les IDs des participants (NON-ADMINS)
-    try {
-        // La constante ADMIN_USERNAME est directement accessible car elle est définie dans config.php
-        $stmt = $pdo->prepare("SELECT id FROM users WHERE username != ?");
-        $stmt->execute([ADMIN_USERNAME]); 
-        $all_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
-    } catch (PDOException $e) {
-        $error = "Erreur BDD lors de la récupération des participants: " . $e->getMessage();
-        return false;
-    }
-
-    $count = count($all_ids);
-
-    if ($count < 2) {
-        $error = "Il faut au moins deux participants (hors admin) pour effectuer un tirage au sort.";
-        return false;
-    }
+/**
+ * Gère l'annulation complète du tirage au sort (Réinitialisation).
+ * @param PDO $pdo Connexion à la base de données.
+ * @return bool
+ */
+function cancelSecretSantaDraw($pdo) {
+    global $error, $message;
     
-    $MAX_ATTEMPTS = 100;
-    $attempt = 0;
-    $draw_successful = false;
-    $draw_results = [];
-
-    // Boucle principale pour garantir un tirage sans auto-attribution
-    while ($attempt < $MAX_ATTEMPTS && !$draw_successful) {
-        $attempt++;
-        $draw_successful = true;
-        $draw_results = [];
-        
-        $givers = $all_ids;
-        $receivers = $all_ids;
-        
-        shuffle($givers);
-        
-        foreach ($givers as $giver_id) {
-            $possible_receivers = array_diff($receivers, [$giver_id]);
-            
-            if (empty($possible_receivers) && count($receivers) == 1) {
-                $draw_successful = false;
-                break;
-            }
-            
-            $receiver_id = $possible_receivers[array_rand($possible_receivers)];
-            
-            $draw_results[] = ['giver_id' => $giver_id, 'receiver_id' => $receiver_id];
-            $receivers = array_diff($receivers, [$receiver_id]);
-        }
-        
-        if (!empty($receivers)) {
-            $draw_successful = false;
-        }
-    }
-
-    if (!$draw_successful) {
-        $error = "Erreur après $MAX_ATTEMPTS tentatives: Le tirage est bloqué. Veuillez vérifier vos participants.";
-        return false;
-    }
-    
-    // 4. Enregistrement des résultats (si le tirage a réussi)
     try {
         $pdo->beginTransaction();
-        $pdo->exec("TRUNCATE TABLE draw"); 
-
-        $sql = "INSERT INTO draw (giver_id, receiver_id) VALUES (:giver, :receiver)";
-        $stmt = $pdo->prepare($sql);
         
-        foreach ($draw_results as $result) {
-            $stmt->execute([':giver' => $result['giver_id'], ':receiver' => $result['receiver_id']]);
-        }
+        // 1. Vider la table des résultats du tirage
+        $pdo->exec("TRUNCATE TABLE draw"); 
+        
+        // 2. Réinitialiser le statut de pioche pour TOUS les utilisateurs (sauf l'admin)
+        $pdo->exec("UPDATE users SET has_drawn = 0 WHERE username != '" . ADMIN_USERNAME . "'");
         
         $pdo->commit();
-        $message = "Le tirage au sort a été effectué avec succès pour " . $count . " participants !";
+        $message = "Le tirage au sort a été annulé. Tous les résultats et les statuts de pioche ont été réinitialisés.";
         return true;
 
     } catch (PDOException $e) {
-        // Correction du rollBack + affichage de l'erreur propre
-        if ($pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
-        $error = "Erreur BDD lors de l'enregistrement du tirage: " . $e->getMessage();
+        if ($pdo->inTransaction()) { $pdo->rollBack(); }
+        $error = "Erreur BDD lors de l'annulation: " . $e->getMessage();
         return false;
     }
 }
 
 
-// --- LOGIQUE DE L'APPLICATION (Action POST) ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'run_draw') {
-    $stmt_check = $pdo->query("SELECT COUNT(*) FROM draw");
-    if ($stmt_check->fetchColumn() > 0) {
-        $error = "Un tirage existe déjà. Veuillez l'annuler avant d'en lancer un nouveau.";
-    } else {
-        runSecretSantaDraw($pdo);
+// =======================================================
+// A. TRAITEMENT POST : Annulation du Tirage
+// =======================================================
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    if ($_POST['action'] === 'cancel_draw') {
+        cancelSecretSantaDraw($pdo);
+        // Redirection POST-Redirect-GET
+        header('Location: admin.php');
+        exit;
     }
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'cancel_draw') {
-    try {
-        $pdo->exec("TRUNCATE TABLE draw");
-        $message = "Le tirage au sort a été annulé avec succès. La page de dashboard affichera le statut 'En attente'.";
-    } catch (PDOException $e) {
-        $error = "Erreur BDD lors de l'annulation du tirage: " . $e->getMessage();
-    }
-}
 
-// --- VÉRIFICATION DU STATUT ACTUEL DU TIRAGE ---
+// ... Le reste du code de récupération des données et d'affichage est conservé ci-dessous ...
+
+
+$status_participants_count = 0;
+$draw_count = 0;
+$has_drawn_count = 0;
+$participants = [];
+
 try {
-    $stmt_status = $pdo->query("SELECT COUNT(*) FROM draw");
-    $draw_count = $stmt_status->fetchColumn();
-    $draw_exists = ($draw_count > 0);
+    // 1. Compter les participants et l'état du tirage
+    $stmt = $pdo->query("SELECT COUNT(*) FROM users WHERE username != '" . ADMIN_USERNAME . "'");
+    $status_participants_count = $stmt->fetchColumn();
 
-    $stmt_participants = $pdo->prepare("SELECT fullname FROM users WHERE username != ? ORDER BY fullname ASC");
-    $stmt_participants->execute([ADMIN_USERNAME]);
-    $participants = $stmt_participants->fetchAll(PDO::FETCH_COLUMN);
-    $participants_count = count($participants); 
+    $stmt_draw = $pdo->query("SELECT COUNT(*) FROM draw");
+    $draw_count = $stmt_draw->fetchColumn();
+
+    $stmt_drawn = $pdo->query("SELECT COUNT(*) FROM users WHERE has_drawn = 1 AND username != '" . ADMIN_USERNAME . "'");
+    $has_drawn_count = $stmt_drawn->fetchColumn();
+
+    // 2. Récupérer la liste des participants pour le suivi des pioches
+    $stmt_list = $pdo->query("
+        SELECT fullname, has_drawn 
+        FROM users 
+        WHERE username != '" . ADMIN_USERNAME . "' 
+        ORDER BY fullname
+    ");
+    $participants = $stmt_list->fetchAll(PDO::FETCH_ASSOC);
 
 } catch (PDOException $e) {
-    $error = "Erreur lors de la vérification du statut du tirage.";
+    $error = "Erreur de base de données : " . $e->getMessage();
 }
+
 
 require_once 'template/header.php';
 ?>
 
 <h1 class="mb-4">Panneau d'Administration</h1>
 
-<?php if ($message): ?>
+<?php if (isset($error)): ?>
+    <div class="alert alert-danger" role="alert"><?php echo htmlspecialchars($error); ?></div>
+<?php endif; ?>
+<?php if (isset($message)): ?>
     <div class="alert alert-success" role="alert"><?php echo htmlspecialchars($message); ?></div>
 <?php endif; ?>
 
-<?php 
-// Nettoyage de l'erreur "no active transaction" si le tirage est un succès
-$display_error = $error;
-if ($draw_exists && strpos($error, 'no active transaction') !== false) {
-    $display_error = '';
-}
-?>
+<h2 class="mt-4 pb-2 border-bottom text-danger">Statut Actuel</h2>
 
-<?php if ($display_error): ?>
-    <div class="alert alert-danger" role="alert"><?php echo htmlspecialchars($display_error); ?></div>
+<p>Nombre de participants inscrits : <strong><?php echo $status_participants_count; ?></strong></p>
+<p>Statut du tirage complet : 
+    <span class="badge bg-<?php echo $draw_count > 0 ? 'success' : 'warning text-dark'; ?>">
+        <?php echo $draw_count > 0 ? 'TERMINÉ (' . $draw_count . ' paires)' : 'EN ATTENTE'; ?>
+    </span>
+</p>
+<p>Participants ayant pioché : 
+    <span class="badge bg-primary">
+        <?php echo $has_drawn_count; ?> / <?php echo $status_participants_count; ?>
+    </span>
+</p>
+
+<h2 class="mt-4 pb-2 border-bottom text-danger">Gestion du Tirage</h2>
+
+<?php if ($draw_count > 0): ?>
+    <div class="alert alert-warning">
+        <p>Le tirage est terminé. Vous pouvez l'annuler pour recommencer. Cela remettra à zéro le statut de pioche de tout le monde.</p>
+        <form method="POST" action="admin.php">
+            <input type="hidden" name="action" value="cancel_draw">
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir annuler le tirage ? Cela remettra à zéro le statut de pioche des utilisateurs et les paires enregistrées.');">
+                Annuler le tirage
+            </button>
+        </form>
+    </div>
+<?php else: ?>
+    <div class="alert alert-info">
+        Le tirage n'a pas été effectué. Les utilisateurs peuvent piocher à tout moment.
+    </div>
 <?php endif; ?>
 
-<div class="card p-3 mb-4 shadow-sm">
-    <h2 class="card-title text-danger mb-3">Statut Actuel</h2>
-    <div class="card-body">
-        <p>Nombre de participants inscrits : <strong><?php echo $participants_count; ?></strong></p>
-        <p>Statut du tirage : 
-            <?php if ($draw_exists): ?>
-                <span class="badge bg-success fs-6">TERMINÉ (<?php echo $draw_count; ?> paires)</span>
-            <?php else: ?>
-                <span class="badge bg-danger fs-6">EN ATTENTE</span>
-            <?php endif; ?>
-        </p>
-    </div>
-</div>
 
-<div class="card p-4 mb-4 border-primary shadow-sm">
-    <h2 class="card-title text-primary">Action de Tirage</h2>
-    
-    <?php if (!$draw_exists): ?>
-        <p>Cliquez ci-dessous pour lancer le tirage au sort Secret Santa.</p>
-        <form method="POST" action="admin.php" onsubmit="return confirm('Êtes-vous sûr de vouloir lancer le tirage ? Cette action est irréversible (sauf annulation manuelle).');">
-            <input type="hidden" name="action" value="run_draw">
-            <button type="submit" class="btn btn-primary btn-lg mt-2">
-                Lancer le Tirage au Sort
-            </button>
-        </form>
-    <?php else: ?>
-        <p>Le tirage est terminé. Vous pouvez l'annuler si nécessaire pour relancer un nouveau cycle.</p>
-        <form method="POST" action="admin.php" onsubmit="return confirm('ATTENTION : Êtes-vous sûr d\'ANNULER le tirage ? Tous les participants verront le statut "En Attente".');">
-            <input type="hidden" name="action" value="cancel_draw">
-            <button type="submit" class="btn btn-danger btn-lg mt-2">
-                Annuler le Tirage Actuel
-            </button>
-        </form>
-    <?php endif; ?>
-</div>
+<h2 class="mt-5 pb-2 border-bottom text-danger">Qui a pioché son Secret Santa ?</h2>
 
-<div class="mt-5">
-    <h2>Liste des Participants</h2>
-    <p>Voici les personnes qui seront incluses dans le tirage :</p>
-    
-    <ul class="list-group">
-        <?php foreach ($participants as $p): ?>
-            <li class="list-group-item"><?php echo htmlspecialchars($p); ?></li>
-        <?php endforeach; ?>
-    </ul>
+<div class="table-responsive">
+    <table class="table table-striped table-sm">
+        <thead>
+            <tr>
+                <th>Participant</th>
+                <th class="text-center">Statut de la Pioche</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($participants as $p): ?>
+            <tr>
+                <td><?php echo htmlspecialchars($p['fullname']); ?></td>
+                <td class="text-center">
+                    <?php if ($p['has_drawn']): ?>
+                        <span class="badge bg-success">Pioche effectuée</span>
+                    <?php else: ?>
+                        <span class="badge bg-secondary">En attente</span>
+                    <?php endif; ?>
+                </td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
 </div>
 
 <?php require_once 'template/footer.php'; ?>
