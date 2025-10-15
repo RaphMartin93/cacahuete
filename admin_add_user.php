@@ -10,52 +10,69 @@ if (!$_SESSION['is_admin']) {
     exit;
 }
 
+// --- INITIALISATION DES VARIABLES ---
 $message = '';
 $error = '';
+$username = '';
+$fullname = '';
+// NOUVELLE INITIALISATION pour le champ de liste de cadeaux
+$gift_list_url = '';
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
     $fullname = trim($_POST['fullname'] ?? '');
-    // Le mot de passe initial est souvent simple ou généré par l'admin. 
-    // Ici, nous utilisons un mot de passe par défaut.
-    $initial_password = 'password123'; // Définissez un mot de passe initial sécurisé !
-
-    if (empty($username) || empty($fullname)) {
-        $error = "Veuillez remplir l'Identifiant et le Nom Complet.";
+    $initial_password = $_POST['initial_password'] ?? ''; 
+    // NOUVELLE RÉCUPÉRATION du lien cadeau
+    $gift_list_url = trim($_POST['gift_list_url'] ?? ''); 
+    
+    // Ajout d'une vérification basique pour le lien, mais le champ est optionnel si vide est autorisé
+    // if (!empty($gift_list_url) && !filter_var($gift_list_url, FILTER_VALIDATE_URL)) {
+    //     $error = "Veuillez entrer un lien de liste de cadeaux valide, ou laisser vide.";
+    // } 
+    
+    // Le lien n'est pas obligatoire, nous vérifions seulement les champs essentiels
+    if (empty($username) || empty($fullname) || empty($initial_password)) {
+        $error = "Veuillez remplir l'Identifiant, le Nom Complet ET le Mot de Passe.";
+        
     } elseif (!preg_match('/^[a-z0-9_]+$/i', $username)) {
         $error = "L'Identifiant ne doit contenir que des lettres, chiffres et underscores.";
+        
     } else {
         try {
-            // Vérifier si l'identifiant existe déjà
+            // 1. Vérifier si l'identifiant existe déjà
             $stmt_check = $pdo->prepare("SELECT COUNT(*) FROM users WHERE username = ?");
             $stmt_check->execute([$username]);
 
             if ($stmt_check->fetchColumn() > 0) {
                 $error = "Cet identifiant ('" . htmlspecialchars($username) . "') est déjà utilisé.";
             } else {
-                // Hachage du mot de passe
+                // 2. Procéder à l'ajout
                 $password_hash = password_hash($initial_password, PASSWORD_DEFAULT);
 
-                // Insertion du nouvel utilisateur
+                // La requête SQL utilise déjà 'gift_list_url', c'est parfait
                 $stmt_insert = $pdo->prepare(
-                    "INSERT INTO users (username, fullname, password_hash, is_admin, gift_list_url) 
-                     VALUES (?, ?, ?, 0, '')"
+                    "INSERT INTO users (username, fullname, password, is_admin, gift_list_url) 
+                     VALUES (?, ?, ?, 0, ?)" // Ajout d'un 5ème point d'interrogation pour le lien
                 );
                 
-                if ($stmt_insert->execute([$username, $fullname, $password_hash])) {
+                // --- MISE À JOUR : Ajout de $gift_list_url dans le tableau d'exécution
+                if ($stmt_insert->execute([$username, $fullname, $password_hash, $gift_list_url])) {
                     $message = "L'utilisateur <strong>" . htmlspecialchars($fullname) . "</strong> a été ajouté avec succès.
-                                <br>Mot de passe initial : <code>" . htmlspecialchars($initial_password) . "</code> (Il devra le changer).";
+                                <br>Mot de passe initial défini. Rappelez au participant qu'il doit le changer.";
                     
-                    // Optionnel : Réinitialiser les champs du formulaire après succès
                     $username = '';
                     $fullname = '';
+                    $gift_list_url = ''; // Réinitialisation du champ après succès
                 } else {
                     $error = "Erreur lors de l'insertion dans la base de données.";
                 }
             }
 
         } catch (PDOException $e) {
-            $error = "Erreur de base de données : " . $e->getMessage();
+            // REMETTRE LA VERSION SÉCURISÉE EN PRODUCTION
+            // $error = "Erreur de base de données : " . $e->getMessage(); 
+            $error = "Erreur de base de données : Une erreur est survenue."; 
         }
     }
 }
@@ -94,6 +111,19 @@ require_once 'template/header.php';
                    value="<?php echo htmlspecialchars($fullname); ?>" required>
         </div>
         
+        <div class="mb-3">
+            <label for="initial_password" class="form-label">Mot de Passe Initial</label>
+            <input type="password" class="form-control" id="initial_password" name="initial_password" 
+                   required> 
+            <div class="form-text">Ce mot de passe sera utilisé pour la première connexion.</div>
+        </div>
+        
+        <div class="mb-3">
+            <label for="gift_list_url" class="form-label">Lien vers la Liste de Cadeaux (Optionnel)</label>
+            <input type="url" class="form-control" id="gift_list_url" name="gift_list_url" 
+                   value="<?php echo htmlspecialchars($gift_list_url); ?>"> 
+            <div class="form-text">Lien complet (ex: https://...) vers la liste de cadeaux du participant.</div>
+        </div>
         <button type="submit" class="btn btn-primary w-100 mt-3">
             Ajouter l'utilisateur
         </button>
