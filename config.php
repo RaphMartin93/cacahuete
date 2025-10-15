@@ -15,8 +15,8 @@ error_reporting(E_ALL);
 // -------------------------------------------------------------
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'secretsanta_db'); 
-define('DB_USER', 'santa_user'); // VOTRE UTILISATEUR BDD
-define('DB_PASS', 'secretsanta'); // VOTRE MOT DE PASSE BDD
+define('DB_USER', 'mariadmin'); // VOTRE UTILISATEUR BDD
+define('DB_PASS', '#aeUd4hWJvxrTcS_x9@s'); // VOTRE MOT DE PASSE BDD
 // -------------------------------------------------------------
 
 
