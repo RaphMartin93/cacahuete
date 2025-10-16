@@ -14,7 +14,7 @@ error_reporting(E_ALL);
 // --- CONFIGURATION DE LA BASE DE DONNÉES ---
 // -------------------------------------------------------------
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'secretsanta_db'); 
+define('DB_NAME', 'cacahuete_db'); 
 define('DB_USER', 'mariadmin'); // VOTRE UTILISATEUR BDD
 define('DB_PASS', '#aeUd4hWJvxrTcS_x9@s'); // VOTRE MOT DE PASSE BDD
 // -------------------------------------------------------------
