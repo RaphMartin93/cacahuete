@@ -1,5 +1,3 @@
-Absolument. Voici le texte au format Markdown, structuré et mis en forme pour une meilleure lisibilité :
-
 # 🥜 Cacahuète - L'Application de Tirage au Sort Secret Santa
 
 Bienvenue sur le dépôt de **Cacahuète**, un projet simple et efficace développé en **PHP** pour gérer un tirage au sort **Secret Santa** (Père Noël Secret) au sein d'un groupe d'utilisateurs.
@@ -86,7 +84,3 @@ Le projet intègre nativement plusieurs protections :
 ## 📝 Licence
 
 Ce projet est distribué sous la **licence MIT**. Voir le fichier `LICENSE` pour plus de détails.
-
-Fait avec passion et rigueur en PHP 8.3.
-
-[Image of peanut]
