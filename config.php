@@ -1,12 +1,29 @@
 <?php
-// Fichier: /home/secretsanta/public_html/config.php
+// Fichier: /home/cacahuete/public_html/config.php
 
 // -------------------------------------------------------------
-// --- PARAMÈTRES DE DEBUG (À DÉSACITVER EN PRODUCTION) ---
+// SÉCURITÉ : EN-TÊTES HTTP (DOIVENT ÊTRE ENVOYÉS EN PREMIER)
 // -------------------------------------------------------------
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+header("X-Content-Type-Options: nosniff");
+header("X-Frame-Options: SAMEORIGIN");
+header("X-XSS-Protection: 1; mode=block");
+
+
+// -------------------------------------------------------------
+// --- GESTION DE L'ENVIRONNEMENT ET DES ERREURS ---
+// -------------------------------------------------------------
+define('ENVIRONMENT', 'production'); // METTEZ 'development' POUR DÉBOGUER
+
+if (ENVIRONMENT === 'development') {
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+} else {
+    // Désactiver l'affichage en production
+    ini_set('display_errors', 0);
+    ini_set('display_startup_errors', 0);
+    error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED); 
+}
 // -------------------------------------------------------------
 
 
@@ -15,25 +32,29 @@ error_reporting(E_ALL);
 // -------------------------------------------------------------
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'cacahuete_db'); 
-define('DB_USER', 'mariadmin'); // VOTRE UTILISATEUR BDD
-define('DB_PASS', '#aeUd4hWJvxrTcS_x9@s'); // VOTRE MOT DE PASSE BDD
+define('DB_USER', 'mariadmin');
+define('DB_PASS', '#aeUd4hWJvxrTcS_x9@s');
 // -------------------------------------------------------------
 
 
 // -------------------------------------------------------------
 // --- CONFIGURATION DE L'APPLICATION ---
 // -------------------------------------------------------------
-// Nom d'utilisateur du compte Administrateur (celui à exclure du tirage)
-// Si votre login admin est 'admin', laissez 'admin'. Si c'est 'rocky', mettez 'rocky'.
 define('ADMIN_USERNAME', 'admin'); 
+// Chemin pour la gestion des liens si mod_rewrite n'est pas utilisé
+define('BASE_PATH', '/cacahuete/'); 
 // -------------------------------------------------------------
 
 
 // -------------------------------------------------------------
 // --- GESTION DES SESSIONS ---
 // -------------------------------------------------------------
-// Démarre la session si elle n'a pas déjà été démarrée
 if (session_status() == PHP_SESSION_NONE) {
+    // SÉCURITÉ : paramètres de session
+    ini_set('session.use_only_cookies', 1);
+    ini_set('session.cookie_httponly', 1); 
+    
     session_start();
 }
 // -------------------------------------------------------------
+?>

@@ -27,7 +27,8 @@ try {
 
     if ($user && password_verify($password, $user['password'])) {
         // 2. Connexion réussie : Initialisation des variables de session
-        
+        session_regenerate_id(true);
+
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
         $_SESSION['fullname'] = $user['fullname'];
