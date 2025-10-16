@@ -1,5 +1,5 @@
 <?php
-// Fichier: /home/secretsanta/public_html/users_list.php
+// Fichier: /home/cacahuete/public_html/users_list.php
 
 require_once 'config.php';
 require_once 'auth_check.php';

@@ -1,5 +1,5 @@
 <?php
-// Fichier: /home/secretsanta/public_html/login.php
+// Fichier: /home/cacahuete/public_html/login.php
 
 require_once 'config.php';
 require_once 'db_connect.php';

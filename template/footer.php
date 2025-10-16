@@ -1,5 +1,5 @@
 <?php
-// Fichier: /home/secretsanta/public_html/template/footer.php (Version Pure Bootstrap 5.3.8)
+// Fichier: /home/cacahuete/public_html/template/footer.php
 ?>
     <footer>
         <p class="text-center text-muted mt-5 pt-3 border-top">

@@ -1,5 +1,5 @@
 <?php 
-// Fichier: /home/secretsanta/public_html/template/header.php (Version Pure Bootstrap 5.3.8)
+// Fichier: /home/cacahuete/public_html/template/header.php
 
 // Ce fichier DOIT être inclus après auth_check.php pour avoir accès aux variables de session
 

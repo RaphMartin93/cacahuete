@@ -1,5 +1,5 @@
 <?php
-// Fichier: /home/secretsanta/public_html/admin_add_user.php
+// Fichier: /home/cacahuete/public_html/admin_add_user.php
 
 require_once 'config.php';
 require_once 'auth_check.php';

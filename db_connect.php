@@ -1,5 +1,6 @@
 <?php
-// Fichier: /home/secretsanta/public_html/db_connect.php
+// Fichier: /home/cacahuete/public_html/db_connect.php
+
 require_once 'config.php';
 
 try {
@@ -17,7 +18,6 @@ try {
     // En cas d'erreur de connexion
     // En développement, vous pouvez afficher l'erreur :
     // echo "Erreur de connexion à la base de données: " . $e->getMessage();
-    
     // En production, affichez un message générique
     die("Désolé, une erreur interne est survenue.");
 }

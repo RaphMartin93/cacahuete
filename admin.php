@@ -1,5 +1,5 @@
 <?php
-// Fichier: /home/secretsanta/public_html/admin.php (Modification avec Annulation fonctionnelle)
+// Fichier: /home/cacahuete/public_html/admin.php (Modification avec Annulation fonctionnelle)
 
 require_once 'config.php';
 require_once 'auth_check.php';
