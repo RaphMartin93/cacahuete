@@ -1,5 +1,4 @@
 <?php
-// Fichier: /home/cacahuete/public_html/auth_check.php
 
 // Le fichier config.php DOIT être inclus avant celui-ci dans les pages qui l'utilisent.
 

@@ -1,5 +1,4 @@
 <?php
-// Fichier: /home/cacahuete/public_html/users_list.php
 
 require_once 'config.php';
 require_once 'auth_check.php';
@@ -32,7 +31,7 @@ require_once 'template/header.php';
         Aucun participant trouvé pour le moment (à part l'administrateur).
     </div>
 <?php else: ?>
-    <p>Voici la liste de tous les participants au Secret Santa. </p>
+    <p>Voici la liste de tous les participants à la Cacahuète. </p>
 
     <div class="table-responsive">
         <table class="table table-striped table-hover shadow-sm">

@@ -1,7 +1,5 @@
 <?php
 
-// Fichier: /home/cacahuete/public_html/draw_logic.php
-
 /**
  * draw_logic.php
  * Contient la logique pour effectuer un tirage au sort (Secret Santa) pour un seul utilisateur (à la volée).

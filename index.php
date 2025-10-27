@@ -1,5 +1,4 @@
 <?php
-// Fichier: /home/cacahuete/public_html/index.php
 
 session_start(); // S'assurer que la session est démarrée pour les messages d'erreur
 

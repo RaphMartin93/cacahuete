@@ -1,5 +1,4 @@
 <?php
-// Fichier: /home/cacahuete/public_html/logout.php
 
 require_once 'config.php'; // Pour accéder à la session
 

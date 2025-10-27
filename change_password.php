@@ -1,5 +1,4 @@
 <?php
-// Fichier: /home/cacahuete/public_html/change_password.php
 
 require_once 'config.php';
 require_once 'auth_check.php';

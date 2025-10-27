@@ -1,5 +1,4 @@
 <?php
-// Fichier: /home/cacahuete/public_html/db_connect.php
 
 require_once 'config.php';
 

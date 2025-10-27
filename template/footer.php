@@ -1,5 +1,4 @@
 <?php
-// Fichier: /home/cacahuete/public_html/template/footer.php
 ?>
     <footer>
         <p class="text-center text-muted mt-5 pt-3 border-top">

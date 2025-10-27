@@ -1,5 +1,4 @@
 <?php
-// Fichier: /home/cacahuete/public_html/config.php
 
 // -------------------------------------------------------------
 // SÉCURITÉ : EN-TÊTES HTTP (DOIVENT ÊTRE ENVOYÉS EN PREMIER)

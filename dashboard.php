@@ -1,5 +1,4 @@
 <?php
-// Fichier: /home/cacahuete/public_html/dashboard.php (Adapté à GIVER/RECEIVER IDs, Exclusion Admin)
 
 require_once 'config.php';
 require_once 'auth_check.php';

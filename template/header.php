@@ -1,5 +1,4 @@
 <?php 
-// Fichier: /home/cacahuete/public_html/template/header.php
 
 // Ce fichier DOIT être inclus après auth_check.php pour avoir accès aux variables de session
 
