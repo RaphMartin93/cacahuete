@@ -8,8 +8,10 @@ require_once 'draw_logic.php';
 
 $recipient_name = null;
 $recipient_gift_url = null;
-// Récupérer le statut de la pioche depuis la session
-$has_drawn = $_SESSION['has_drawn'] ?? 0; 
+// On récupère TOUJOURS l'état réel depuis la BDD
+$stmt = $pdo->prepare("SELECT has_drawn FROM users WHERE id = ?");
+$stmt->execute([$_SESSION['user_id']]);
+$has_drawn = (bool) $stmt->fetchColumn();
 $is_admin = $_SESSION['is_admin'] ?? false; // On récupère aussi le statut admin
 
 $error_message = $_SESSION['error'] ?? '';
