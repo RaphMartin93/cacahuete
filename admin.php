@@ -133,7 +133,7 @@ require_once 'template/header.php';
 <?php endif; ?>
 
 
-<h2 class="mt-5 pb-2 border-bottom text-danger">Qui a pioché son Secret Santa ?</h2>
+<h2 class="mt-5 pb-2 border-bottom text-danger">Qui a pioché son Père Noël secret ?</h2>
 
 <div class="table-responsive">
     <table class="table table-striped table-sm">
