@@ -26,8 +26,8 @@ function cancelSecretSantaDraw($pdo) {
         // 1. Vider la table des résultats du tirage
         $pdo->exec("TRUNCATE TABLE draw"); 
         
-        // 2. Réinitialiser le statut de pioche pour TOUS les utilisateurs (sauf l'admin)
-        $pdo->exec("UPDATE users SET has_drawn = 0 WHERE username != '" . ADMIN_USERNAME . "'");
+        // 2. Réinitialiser le statut de pioche pour les PARTICIPANTS (sauf l'admin et les enfants)
+        $pdo->exec("UPDATE users SET has_drawn = 0 WHERE username != '" . ADMIN_USERNAME . "' AND is_child = 0");
         
         $pdo->commit();
         $message = "Le tirage au sort a été annulé. Tous les résultats et les statuts de pioche ont été réinitialisés.";
@@ -63,21 +63,33 @@ $has_drawn_count = 0;
 $participants = [];
 
 try {
-    // 1. Compter les participants et l'état du tirage
-    $stmt = $pdo->query("SELECT COUNT(*) FROM users WHERE username != '" . ADMIN_USERNAME . "'");
+    // 1. Compter les participants et l'état du tirage (enfants exclus)
+    $stmt = $pdo->query("
+        SELECT COUNT(*)
+        FROM users
+        WHERE username != '" . ADMIN_USERNAME . "'
+          AND is_child = 0
+    ");
     $status_participants_count = $stmt->fetchColumn();
 
     $stmt_draw = $pdo->query("SELECT COUNT(*) FROM draw");
     $draw_count = $stmt_draw->fetchColumn();
 
-    $stmt_drawn = $pdo->query("SELECT COUNT(*) FROM users WHERE has_drawn = 1 AND username != '" . ADMIN_USERNAME . "'");
+    $stmt_drawn = $pdo->query("
+        SELECT COUNT(*)
+        FROM users
+        WHERE has_drawn = 1
+          AND username != '" . ADMIN_USERNAME . "'
+          AND is_child = 0
+    ");
     $has_drawn_count = $stmt_drawn->fetchColumn();
 
-    // 2. Récupérer la liste des participants pour le suivi des pioches
+    // 2. Récupérer la liste des participants pour le suivi des pioches (enfants exclus)
     $stmt_list = $pdo->query("
-        SELECT fullname, has_drawn 
-        FROM users 
-        WHERE username != '" . ADMIN_USERNAME . "' 
+        SELECT fullname, has_drawn
+        FROM users
+        WHERE username != '" . ADMIN_USERNAME . "'
+          AND is_child = 0
         ORDER BY fullname
     ");
     $participants = $stmt_list->fetchAll(PDO::FETCH_ASSOC);
