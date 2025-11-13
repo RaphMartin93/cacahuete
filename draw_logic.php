@@ -92,7 +92,7 @@ function runSingleSecretSantaDraw(PDO $pdo, int $user_id)
 
         // 6. Enregistrer le tirage dans la table draw
         $stmt_insert = $pdo->prepare("
-            INSERT INTO draw (gifter_id, receiver_id, draw_date)
+            INSERT INTO draw (giver_id, receiver_id, draw_date)
             VALUES (?, ?, NOW())
         ");
         $stmt_insert->execute([$user_id, $receiver_id]);
