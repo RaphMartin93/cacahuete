@@ -3,22 +3,26 @@
 /**
  * draw_logic.php
  * Logique de tirage Secret Santa pour un seul utilisateur.
- * Ce script est inclus dans dashboard.php.
+ * Utilise la table `draw` avec les colonnes :
+ *   - giver_id
+ *   - reciever_id   (orthographe de la colonne dans ta base)
  *
  * On exclut :
- *  - l’admin
- *  - les enfants (is_child = 1)
+ *   - l’admin
+ *   - les enfants (is_child = 1)
  */
 
 function runSingleSecretSantaDraw(PDO $pdo, int $user_id)
 {
     // Variable globale pour remonter les erreurs vers dashboard.php
     global $error;
+    $error = null;
 
     try {
+        // 1. Démarrer la transaction
         $pdo->beginTransaction();
 
-        // 1. Vérifier que l'utilisateur existe et qu'il n'est pas un enfant
+        // 2. Récupérer l'utilisateur courant (et le verrouiller pour ce tirage)
         $stmt = $pdo->prepare("
             SELECT id, fullname, is_admin, is_child, has_drawn
             FROM users
@@ -34,25 +38,28 @@ function runSingleSecretSantaDraw(PDO $pdo, int $user_id)
             return false;
         }
 
-        if ((int)$current_user['is_child'] === 1) {
-            $error = "Les enfants ne participent pas au tirage.";
-            $pdo->rollBack();
-            return false;
-        }
-
+        // Admin ne joue pas
         if ((int)$current_user['is_admin'] === 1) {
             $error = "L'administrateur ne participe pas au tirage.";
             $pdo->rollBack();
             return false;
         }
 
+        // Enfant ne joue pas
+        if ((int)$current_user['is_child'] === 1) {
+            $error = "Les enfants ne participent pas au tirage.";
+            $pdo->rollBack();
+            return false;
+        }
+
+        // Déjà pioché ?
         if ((int)$current_user['has_drawn'] === 1) {
             $error = "Vous avez déjà effectué votre tirage.";
             $pdo->rollBack();
             return false;
         }
 
-        // 2. Récupérer tous les participants éligibles (ni admin, ni enfant)
+        // 3. Liste des participants éligibles : ni admin, ni enfant
         $stmt_participants = $pdo->query("
             SELECT id
             FROM users
@@ -62,16 +69,17 @@ function runSingleSecretSantaDraw(PDO $pdo, int $user_id)
         $all_participants_ids = $stmt_participants->fetchAll(PDO::FETCH_COLUMN, 0);
 
         if (count($all_participants_ids) < 2) {
-            $error = "Erreur : pas assez de participants pour effectuer un tirage.";
+            $error = "Pas assez de participants pour effectuer un tirage.";
             $pdo->rollBack();
             return false;
         }
 
-        // 3. Récupérer les destinataires déjà attribués
-        $stmt_assigned = $pdo->query("SELECT receiver_id FROM draw");
+        // 4. Récupérer les destinataires déjà attribués
+        // ⚠️ colonne `reciever_id` (orthographe de ta table)
+        $stmt_assigned = $pdo->query("SELECT reciever_id FROM draw");
         $assigned_recipients_ids = $stmt_assigned->fetchAll(PDO::FETCH_COLUMN, 0);
 
-        // 4. Calculer la liste des destinataires possibles :
+        // 5. Destinataires possibles :
         //    - pas déjà piochés
         //    - pas soi-même
         $potential_receiver_ids = array_diff(
@@ -86,18 +94,19 @@ function runSingleSecretSantaDraw(PDO $pdo, int $user_id)
             return false;
         }
 
-        // 5. Tirage aléatoire d'un destinataire
+        // 6. Tirage aléatoire d'un destinataire
         shuffle($potential_receiver_ids);
         $receiver_id = $potential_receiver_ids[0];
 
-        // 6. Enregistrer le tirage dans la table draw
+        // 7. Enregistrer le tirage dans la table draw
+        //    -> seulement giver_id + reciever_id
         $stmt_insert = $pdo->prepare("
-            INSERT INTO draw (giver_id, receiver_id, draw_date)
-            VALUES (?, ?, NOW())
+            INSERT INTO draw (giver_id, reciever_id)
+            VALUES (?, ?)
         ");
         $stmt_insert->execute([$user_id, $receiver_id]);
 
-        // 7. Marquer l'utilisateur comme ayant pioché
+        // 8. Marquer l'utilisateur comme ayant pioché
         $stmt_update = $pdo->prepare("
             UPDATE users
             SET has_drawn = 1
@@ -105,9 +114,10 @@ function runSingleSecretSantaDraw(PDO $pdo, int $user_id)
         ");
         $stmt_update->execute([$user_id]);
 
+        // 9. Valider la transaction
         $pdo->commit();
 
-        // 8. Renvoyer les infos du destinataire
+        // 10. Retourner les infos du destinataire pour affichage
         $stmt_recipient = $pdo->prepare("
             SELECT fullname, gift_list_url
             FROM users
