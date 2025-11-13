@@ -5,7 +5,7 @@
  * Logique de tirage Secret Santa pour un seul utilisateur.
  * Utilise la table `draw` avec les colonnes :
  *   - giver_id
- *   - reciever_id   (orthographe de la colonne dans ta base)
+ *   - receiver_id   (orthographe de la colonne dans ta base)
  *
  * On exclut :
  *   - l’admin
@@ -75,8 +75,8 @@ function runSingleSecretSantaDraw(PDO $pdo, int $user_id)
         }
 
         // 4. Récupérer les destinataires déjà attribués
-        // ⚠️ colonne `reciever_id` (orthographe de ta table)
-        $stmt_assigned = $pdo->query("SELECT reciever_id FROM draw");
+        // ⚠️ colonne `receiver_id` (orthographe de ta table)
+        $stmt_assigned = $pdo->query("SELECT receiver_id FROM draw");
         $assigned_recipients_ids = $stmt_assigned->fetchAll(PDO::FETCH_COLUMN, 0);
 
         // 5. Destinataires possibles :
@@ -99,9 +99,9 @@ function runSingleSecretSantaDraw(PDO $pdo, int $user_id)
         $receiver_id = $potential_receiver_ids[0];
 
         // 7. Enregistrer le tirage dans la table draw
-        //    -> seulement giver_id + reciever_id
+        //    -> seulement giver_id + receiver_id
         $stmt_insert = $pdo->prepare("
-            INSERT INTO draw (giver_id, reciever_id)
+            INSERT INTO draw (giver_id, receiver_id)
             VALUES (?, ?)
         ");
         $stmt_insert->execute([$user_id, $receiver_id]);
